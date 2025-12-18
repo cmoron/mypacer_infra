@@ -1,0 +1,80 @@
+networks:
+  mypacer-staging-net:
+    driver: bridge
+
+services:
+  db-staging:
+    image: postgres:16
+    container_name: mypacer-db-staging
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-mypacer_staging}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - db_staging_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5433:5432"  # Different port to avoid conflict with prod
+    networks:
+      - mypacer-staging-net
+
+  scraper-staging:
+    image: ghcr.io/cmoron/mypacer_scraper:${SCRAPER_IMAGE_TAG:-latest-prod}
+    container_name: mypacer-scraper-staging
+    depends_on:
+      db-staging:
+        condition: service_healthy
+    environment:
+      POSTGRES_DEFAULT_DB: ${POSTGRES_DEFAULT_DB:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-mypacer_staging}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db-staging:5432/${POSTGRES_DB:-mypacer_staging}
+      DB_HOST: db-staging
+      DB_PORT: 5432
+    volumes:
+      - scraper_staging_logs:/app/logs
+    restart: unless-stopped
+    networks:
+      - mypacer-staging-net
+
+  api-staging:
+    image: ghcr.io/cmoron/mypacer_api:${API_IMAGE_TAG:-latest-prod}
+    container_name: mypacer-api-staging
+    depends_on:
+      db-staging:
+        condition: service_healthy
+    ports:
+      # Bound to localhost for the host's reverse proxy (different port from prod)
+      - "127.0.0.1:8001:8000"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-mypacer_staging}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST: db-staging
+      POSTGRES_PORT: 5432
+    restart: unless-stopped
+    networks:
+      - mypacer-staging-net
+
+  web-staging:
+    image: ghcr.io/cmoron/mypacer_web:${WEB_IMAGE_TAG:-latest-staging}
+    container_name: mypacer-web-staging
+    depends_on:
+      api-staging:
+        condition: service_started
+    ports:
+      # Bound to localhost for the host's reverse proxy (different port from prod)
+      - "127.0.0.1:8081:80"
+    restart: unless-stopped
+    networks:
+      - mypacer-staging-net
+
+volumes:
+  db_staging_data:
+  scraper_staging_logs:
