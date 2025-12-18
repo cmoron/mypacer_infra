@@ -43,6 +43,8 @@ services:
     restart: unless-stopped
     networks:
       - mypacer-staging-net
+    # Override: disable automatic cron in staging (manual scraping only)
+    command: tail -f /dev/null
 
   api-staging:
     image: ghcr.io/cmoron/mypacer_api:${API_IMAGE_TAG:-latest-staging}
