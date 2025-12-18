@@ -45,7 +45,7 @@ services:
       - mypacer-staging-net
 
   api-staging:
-    image: ghcr.io/cmoron/mypacer_api:${API_IMAGE_TAG:-latest-prod}
+    image: ghcr.io/cmoron/mypacer_api:${API_IMAGE_TAG:-latest-staging}
     container_name: mypacer-api-staging
     depends_on:
       db-staging:
