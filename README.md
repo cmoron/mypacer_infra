@@ -36,7 +36,7 @@ flowchart TB
     Scraper -- Scrape (Batch Hebdo) --> FFA
     Scraper -- Write (Update) --> DB
     GHCR -. Docker Pull .-> Web & API & Scraper
-
+```
 ## 🚀 Déploiement Docker Compose (prod)
 
 ### Pré-requis
