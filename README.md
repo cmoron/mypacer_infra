@@ -46,6 +46,12 @@ flowchart TB
     Scraper -- Write (Update) --> DB
     GHCR -. Docker Pull .-> Web & API & Scraper
 ```
+## 🧩 Rôles des Services
+
+- **Web (Frontend)** : Interface utilisateur pour la visualisation et la comparaison.
+- **API (Backend)** : Calculateur mathématique + Passerelle "Live" vers `athle.fr` pour les chronos.
+- **Scraper (Worker)** : Tâche de fond construisant l'index de recherche (annuaire) pour garantir la rapidité de la fonctionnalité "Smart Search".
+
 ## 🚀 Déploiement Docker Compose (prod)
 
 ### Pré-requis
