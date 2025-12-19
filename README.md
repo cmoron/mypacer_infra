@@ -1,6 +1,15 @@
 # 🏃 MyPacer Infrastructure
 
-Ce dépôt contient la configuration de déploiement (Infrastructure as Code) et la documentation architecturale de la plateforme **MyPacer**.
+Ce dépôt contient la configuration de déploiement (Infrastructure as Code) et la documentation opérationnelle de la plateforme **MyPacer**.
+
+## 📚 Documentation
+
+- **[PRD.md](./PRD.md)** : Product Requirements Document - Vision produit, fonctionnalités, roadmap
+- **[STAGING.md](./STAGING.md)** : Guide de l'environnement de staging
+- **[PRODUCTION.md](./PRODUCTION.md)** : Guide de l'environnement de production
+- **[PLAN.md](../PLAN.md)** : Plan de développement et historique du projet
+
+---
 
 ## 🏗 Architecture Globale
 
@@ -80,3 +89,41 @@ Ajouter/adapter la terminaison TLS (certbot) dans ces fichiers si besoin.
 ## 🛠 Notes CI/CD
 - Les images `mypacer_scraper`, `mypacer_api` et `mypacer_web` sont publiées sur GHCR via leurs workflows GitHub Actions (`latest-prod`, tags semver et SHA).
 - Le fichier `docker-compose.prod.yml` consomme ces images directement ; il suffit de changer `*_IMAGE_TAG` pour faire un rollback ou geler une version.
+
+---
+
+## 🚀 Guides opérationnels
+
+### Pour développer et tester
+- **Développement local** : Voir les README des repos individuels (mypacer_web, mypacer_api, mypacer_scraper)
+- **[Environnement staging](./STAGING.md)** : Déploiement automatique, tests pré-production
+
+### Pour déployer en production
+- **[Environnement production](./PRODUCTION.md)** : Workflow de release, monitoring, backups, troubleshooting
+
+### Pour comprendre la vision produit
+- **[PRD - Product Requirements Document](./PRD.md)** : Vision, personas, fonctionnalités actuelles et futures
+
+---
+
+## 📊 État actuel
+
+- **Production** : https://mypacer.fr (v0.2.0)
+  - 940,868 athlètes
+  - 3,419 clubs
+  - Architecture Docker complète
+  - Uptime 99.9%
+
+- **Staging** : https://stage.mypacer.fr
+  - Déploiement automatique sur push `main`
+  - Base de données isolée
+  - Tests pré-production
+
+---
+
+## 🏗️ Repositories
+
+- **[mypacer_web](https://github.com/cmoron/mypacer_web)** : Frontend Svelte + Vite
+- **[mypacer_api](https://github.com/cmoron/mypacer_api)** : Backend FastAPI
+- **[mypacer_scraper](https://github.com/cmoron/mypacer_scraper)** : Scraper FFA (cron hebdomadaire)
+- **[mypacer_infra](https://github.com/cmoron/mypacer_infra)** : Infrastructure Docker Compose (ce repo)
