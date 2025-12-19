@@ -77,20 +77,30 @@ docker compose --env-file .env -f docker-compose.prod.yml up -d
 - API : `ghcr.io/cmoron/mypacer_api:${API_IMAGE_TAG}`
 - Front : `ghcr.io/cmoron/mypacer_web:${WEB_IMAGE_TAG}`
 
-### 3) Reverse-proxy Nginx (hôte)
-Deux configs prêtes à copier sur le serveur :
-- `nginx_host/mypacer.fr`    → proxy vers le front (port `WEB_PORT`, défaut 8080)
-- `nginx_host/api.mypacer.fr` → proxy vers l'API (port `API_PORT`, défaut 8000)
+### 3) Configuration Nginx (reverse proxy sur l'hôte)
 
-Exemple (sur l'hôte) :
+Les configurations Nginx sont dans le repo **mypacer_web** :
+- `mypacer_web/nginx/mypacer.fr.conf` → Configuration production
+- `mypacer_web/nginx/stage.mypacer.fr.conf` → Configuration staging
+
+**Déploiement en production** :
 ```bash
-sudo cp nginx_host/mypacer.fr /etc/nginx/sites-available/
-sudo cp nginx_host/api.mypacer.fr /etc/nginx/sites-available/
-sudo ln -s /etc/nginx/sites-available/mypacer.fr /etc/nginx/sites-enabled/
-sudo ln -s /etc/nginx/sites-available/api.mypacer.fr /etc/nginx/sites-enabled/
+# Depuis votre poste local
+cd /path/to/mypacer_web
+git pull origin main
+
+# Copier la config sur le serveur
+scp nginx/mypacer.fr.conf user@prod-server:/tmp/
+
+# Sur le serveur de production
+ssh user@prod-server
+sudo cp /tmp/mypacer.fr.conf /etc/nginx/sites-available/mypacer.fr
+sudo ln -sf /etc/nginx/sites-available/mypacer.fr /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
 ```
-Ajouter/adapter la terminaison TLS (certbot) dans ces fichiers si besoin.
+
+**Note** : La config utilise `/api/` pour router vers l'API (pas de sous-domaine séparé).
+Les certificats SSL sont gérés par Certbot et déjà configurés dans les fichiers Nginx.
 
 ## 🛠 Notes CI/CD
 - Les images `mypacer_scraper`, `mypacer_api` et `mypacer_web` sont publiées sur GHCR via leurs workflows GitHub Actions (`latest-prod`, tags semver et SHA).
