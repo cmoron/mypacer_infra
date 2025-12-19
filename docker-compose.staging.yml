@@ -14,7 +14,7 @@ services:
       - db_staging_data:/var/lib/postgresql/data
       - ./init-db:/docker-entrypoint-initdb.d:ro  # Init scripts (executed once on empty volume)
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB:-mypacer_staging}"]
       interval: 10s
       timeout: 5s
       retries: 5
