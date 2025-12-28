@@ -1,6 +1,13 @@
 -- ============================================================================
 -- Script d'initialisation de la base de données MyPacer
 -- ============================================================================
+-- ✅ SOURCE DE VÉRITÉ - SCHÉMA DE RÉFÉRENCE
+--
+-- Ce fichier est la référence pour le schéma de base de données MyPacer.
+-- Des copies locales existent dans mypacer_api/db/init.sql et
+-- mypacer_scraper/core/schema.sql pour permettre le développement autonome,
+-- mais en cas de divergence, CE FICHIER fait foi.
+--
 -- Ce script est exécuté automatiquement par PostgreSQL au premier démarrage
 -- du container (volume vide). Il ne s'exécute QU'UNE SEULE FOIS.
 --
