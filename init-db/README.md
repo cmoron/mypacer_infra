@@ -1,102 +1,47 @@
-# 🗄️ Database Initialization Scripts
+# Initialisation PostgreSQL
 
-Ce répertoire contient les scripts SQL d'initialisation de la base de données PostgreSQL pour MyPacer.
+`01-init-schema.sql` est la source de vérité du schéma créé pour un nouveau
+volume MyPacer.
 
-## 📋 Comment ça fonctionne
+PostgreSQL exécute les fichiers de ce dossier, dans l'ordre lexical, uniquement
+quand son répertoire de données est vide. Modifier ces scripts ne migre pas une
+base existante.
 
-PostgreSQL exécute automatiquement **tous les scripts** de ce répertoire dans l'ordre alphabétique **au premier démarrage** du container (lorsque le volume est vide).
+## Contenu
 
-Les scripts sont montés en read-only (`ro`) dans `/docker-entrypoint-initdb.d/` du container PostgreSQL.
+`01-init-schema.sql` crée les extensions, tables, index, contraintes, triggers
+et vues nécessaires à l'API et au scraper. La copie éventuellement présente
+dans un dépôt applicatif sert au développement local et ne devient pas la
+référence de production.
 
-## 🔒 Sécurité
+## Évolution du schéma
 
-**IMPORTANT** : Les scripts d'init ne s'exécutent QU'UNE SEULE FOIS, au premier démarrage avec un volume vide.
+1. Évaluer la compatibilité avec les données et images actuellement déployées.
+2. Mettre à jour `01-init-schema.sql` pour les installations neuves.
+3. Préparer une migration explicite et sauvegarder la DB avant de l'appliquer à
+   un volume existant.
+4. Vérifier le schéma, l'API et le scraper sur staging.
+5. Livrer les images compatibles avant ou avec la migration production.
 
-Si le volume contient déjà des données, les scripts sont **complètement ignorés**. Cela protège contre :
-- ❌ L'écrasement accidentel de données de production
-- ❌ La ré-initialisation d'une base existante
-- ❌ La perte de données lors d'un redémarrage
+## Vérification
 
-## 📁 Scripts disponibles
+Sur le serveur de production, qui utilise Docker Compose v1 :
 
-### `01-init-schema.sql`
-Crée le schéma complet de la base de données :
-- Extensions PostgreSQL (`pg_trgm`, `unaccent`)
-- Tables (`athletes`, `clubs`)
-- Index (dont trigram pour recherche floue)
-- Fonctions (`normalize_text`)
-- Triggers (normalisation automatique)
-- Vues (`v_athletes_stats`, `v_clubs_stats`)
-
-## 🔄 Réinitialiser la base de données
-
-Si tu veux vraiment réinitialiser une base (⚠️ **PERTE DE DONNÉES**) :
-
-### Staging
 ```bash
 cd /home/cyril/src/mypacer/mypacer_infra
-
-# 1. Arrêter les containers
-docker compose -f docker-compose.staging.yml down
-
-# 2. Supprimer le volume
-docker volume rm mypacer_infra_db_staging_data
-
-# 3. Redémarrer (le script d'init va s'exécuter)
-docker compose -f docker-compose.staging.yml up -d
-
-# 4. Vérifier les logs de l'init
-docker compose -f docker-compose.staging.yml logs db-staging
+docker-compose -f docker-compose.prod.yml exec -T db \
+  sh -lc 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "\\dt"'
+docker-compose -f docker-compose.prod.yml exec -T db \
+  sh -lc 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c \
+  "SELECT count(*) AS athletes FROM athletes; SELECT count(*) AS clubs FROM clubs;"'
 ```
 
-### Production
-```bash
-cd /home/cyril/src/mypacer/mypacer_infra
+Pour staging, utiliser les mêmes commandes avec
+`docker-compose.staging.yml` et le service `db-staging`.
 
-# ⚠️ ATTENTION : PERTE TOTALE DES DONNÉES DE PRODUCTION
+## Réinitialisation
 
-# 1. Arrêter les containers
-docker compose -f docker-compose.prod.yml down
-
-# 2. Supprimer le volume
-docker volume rm mypacer_infra_db_data
-
-# 3. Redémarrer (le script d'init va s'exécuter)
-docker compose -f docker-compose.prod.yml up -d
-
-# 4. Vérifier les logs de l'init
-docker compose -f docker-compose.prod.yml logs db
-```
-
-## 🧪 Vérifier que l'init a fonctionné
-
-```bash
-# Staging
-docker compose -f docker-compose.staging.yml exec db-staging psql -U mypacer_user -d mypacer_staging -c "\dt"
-docker compose -f docker-compose.staging.yml exec db-staging psql -U mypacer_user -d mypacer_staging -c "SELECT * FROM v_athletes_stats;"
-
-# Production
-docker compose -f docker-compose.prod.yml exec db psql -U mypacer_user -d mypacer -c "\dt"
-docker compose -f docker-compose.prod.yml exec db psql -U mypacer_user -d mypacer -c "SELECT * FROM v_athletes_stats;"
-```
-
-## 📝 Ajouter de nouveaux scripts
-
-Pour ajouter un nouveau script d'initialisation :
-
-1. Créer un fichier avec un préfixe numéroté : `02-add-new-feature.sql`
-2. Les scripts sont exécutés dans l'ordre alphabétique
-3. Utiliser `CREATE TABLE IF NOT EXISTS` pour éviter les erreurs
-4. Le script ne s'exécutera que sur les nouvelles installations
-
-## 🔗 Relation avec le scraper
-
-Le **scraper** (`mypacer_scraper`) est maintenant responsable UNIQUEMENT de :
-- ✅ L'injection des données (scraping FFA)
-- ✅ La mise à jour des données existantes
-
-Il ne crée plus le schéma de base de données, c'est le rôle de ces scripts d'init.
-
-## 📚 Source du schéma
-
-Le schéma SQL est extrait de `mypacer_scraper/core/schema.sql` et maintenu dans ce répertoire pour une gestion centralisée de l'infrastructure.
+La suppression d'un volume détruit toutes ses données. Elle n'appartient pas au
+runbook courant : vérifier l'environnement, le nom Compose, le volume exact et
+un backup restaurable, puis obtenir un accord explicite avant toute
+réinitialisation.
