@@ -94,8 +94,8 @@ Côté prod, sa clé `mypacer_backup` est restreinte dans `~/.ssh/authorized_key
 restrict,command="/home/cyril/src/mypacer/mypacer_infra/scripts/export-latest-backups.sh" ssh-ed25519 AAAA... mypacer-backup@nas
 ```
 
-Côté NAS : `crontab -l` contient
-`0 5 * * * <infra>/scripts/nas-pull-backups.sh >> ~/data/mypacer-backups/pull.log 2>&1`.
+Côté NAS : copie de `scripts/nas-pull-backups.sh` dans `~/bin/`, et `crontab -l` contient
+`0 5 * * * ~/bin/nas-pull-backups.sh >> ~/data/mypacer-backups/pull.log 2>&1`.
 Restauration : `pg_restore` du `.dump`, ou copie du `.db` vers `MPC_DB_PATH`
 service dashboard arrêté.
 
