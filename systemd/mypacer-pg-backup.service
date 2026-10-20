@@ -1,0 +1,6 @@
+[Unit]
+Description=MyPacer PostgreSQL daily dump
+
+[Service]
+Type=oneshot
+ExecStart=/home/cyril/src/mypacer/mypacer_infra/scripts/backup-postgres.sh
