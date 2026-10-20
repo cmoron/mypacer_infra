@@ -68,7 +68,25 @@ docker logs --tail=200 mypacer-scraper
 
 ## Backup PostgreSQL
 
-Avant toute opération de schéma ou restauration :
+Un timer systemd utilisateur lance `scripts/backup-postgres.sh` chaque nuit à
+02h30 : dump `-Fc` dans `~/backups/postgres/`, vérifié par
+`pg_restore --list`, 14 dumps gardés. Installation (une fois, après `git pull`) :
+
+```bash
+cd /home/cyril/src/mypacer/mypacer_infra
+mkdir -p ~/.config/systemd/user
+install -m 0644 systemd/mypacer-pg-backup.service systemd/mypacer-pg-backup.timer \
+  ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user start mypacer-pg-backup.service   # premier dump immédiat
+journalctl --user -u mypacer-pg-backup.service -n 20
+systemctl --user enable --now mypacer-pg-backup.timer
+```
+
+Ces dumps restent sur le serveur : une copie hors machine reste à mettre en
+place.
+
+Dump ponctuel avant toute opération de schéma ou restauration :
 
 ```bash
 ssh cyril@mypacer.fr
