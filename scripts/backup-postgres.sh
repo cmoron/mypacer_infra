@@ -2,6 +2,7 @@
 # Dump quotidien de la base PostgreSQL de prod (conteneur mypacer-db).
 # Vérifie le dump avec pg_restore --list avant de faire tourner la rétention.
 set -euo pipefail
+umask 077  # dumps privés
 
 backup_dir="${BACKUP_DIR:-$HOME/backups/postgres}"
 keep="${KEEP:-14}"
