@@ -1,0 +1,19 @@
+---
+# Installe sur le NAS la copie nocturne des backups prod (voir PRODUCTION.md).
+# Usage : ansible-playbook -i nas, ops/nas-backups.yml
+- name: Pull nocturne des backups MyPacer sur le NAS
+  hosts: nas
+  gather_facts: false
+  tasks:
+    - name: Installer le script de pull
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../scripts/nas-pull-backups.sh"
+        dest: /home/cyril/bin/nas-pull-backups.sh
+        mode: "0700"
+
+    - name: Planifier le pull à 05h00
+      ansible.builtin.cron:
+        name: mypacer-backups-pull
+        minute: "0"
+        hour: "5"
+        job: "$HOME/bin/nas-pull-backups.sh >> $HOME/data/mypacer-backups/pull.log 2>&1"

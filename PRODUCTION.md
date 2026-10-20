@@ -94,10 +94,21 @@ Côté prod, sa clé `mypacer_backup` est restreinte dans `~/.ssh/authorized_key
 restrict,command="/home/cyril/src/mypacer/mypacer_infra/scripts/export-latest-backups.sh" ssh-ed25519 AAAA... mypacer-backup@nas
 ```
 
-Côté NAS : copie de `scripts/nas-pull-backups.sh` dans `~/bin/`, et `crontab -l` contient
-`0 5 * * * ~/bin/nas-pull-backups.sh >> ~/data/mypacer-backups/pull.log 2>&1`.
+Côté NAS, script et crontab sont installés par Ansible :
+`ansible-playbook -i nas, ops/nas-backups.yml` (copie `scripts/nas-pull-backups.sh`
+dans `~/bin/`, entrée cron `mypacer-backups-pull` à 05h00).
 Restauration : `pg_restore` du `.dump`, ou copie du `.db` vers `MPC_DB_PATH`
 service dashboard arrêté.
+
+### Clé de déploiement du scraper
+
+Le workflow `deploy-prod.yml` du dépôt scraper utilise une clé dédiée (secret
+`SSH_KEY` de l'environnement GitHub `production`), restreinte côté prod à une
+commande forcée : elle ne peut que redéployer le conteneur scraper.
+
+```text
+restrict,command="/home/cyril/src/mypacer/mypacer_infra/scripts/deploy-scraper.sh" ssh-ed25519 AAAA... mypacer-scraper-deploy@github
+```
 
 Dump ponctuel avant toute opération de schéma ou restauration :
 
