@@ -126,6 +126,19 @@ test -s "$backup" && ls -lh "$backup"
 Une restauration est destructive : valider le fichier, la cible et une fenêtre
 de maintenance avant de lancer `pg_restore`.
 
+## Nginx de l'hôte
+
+`nginx_host/mypacer.fr` est la copie versionnée de `/etc/nginx/sites-available/mypacer.fr`
+(TLS Certbot, proxy vers web/API/dashboard, `www` → `mypacer.fr`, HSTS). Installation
+(sudo requis) :
+
+```bash
+ssh -t cyril@mypacer.fr 'cd ~/src/mypacer/mypacer_infra && git pull --ff-only \
+  && sudo cp /etc/nginx/sites-available/mypacer.fr /etc/nginx/sites-available/mypacer.fr.bak-$(date +%Y%m%d) \
+  && sudo cp nginx_host/mypacer.fr /etc/nginx/sites-available/mypacer.fr \
+  && sudo nginx -t && sudo systemctl reload nginx'
+```
+
 ## Rollback applicatif
 
 Les variables `WEB_IMAGE_TAG`, `API_IMAGE_TAG` et `SCRAPER_IMAGE_TAG` de `.env`
