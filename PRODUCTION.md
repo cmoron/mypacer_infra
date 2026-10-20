@@ -83,8 +83,21 @@ journalctl --user -u mypacer-pg-backup.service -n 20
 systemctl --user enable --now mypacer-pg-backup.timer
 ```
 
-Ces dumps restent sur le serveur : une copie hors machine reste à mettre en
-place.
+### Copie hors machine (NAS)
+
+Le NAS (`nas`, Debian) tire chaque nuit à 05h00 le dernier dump PostgreSQL et le
+dernier snapshot cockpit Club vers `~/data/mypacer-backups/` (90 jours gardés).
+Côté prod, sa clé `mypacer_backup` est restreinte dans `~/.ssh/authorized_keys`
+à une commande forcée en lecture seule :
+
+```text
+restrict,command="/home/cyril/src/mypacer/mypacer_infra/scripts/export-latest-backups.sh" ssh-ed25519 AAAA... mypacer-backup@nas
+```
+
+Côté NAS : `crontab -l` contient
+`0 5 * * * <infra>/scripts/nas-pull-backups.sh >> ~/data/mypacer-backups/pull.log 2>&1`.
+Restauration : `pg_restore` du `.dump`, ou copie du `.db` vers `MPC_DB_PATH`
+service dashboard arrêté.
 
 Dump ponctuel avant toute opération de schéma ou restauration :
 
